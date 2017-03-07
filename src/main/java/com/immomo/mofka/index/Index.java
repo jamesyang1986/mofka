@@ -53,8 +53,12 @@ public class Index {
         this.end = end;
     }
 
-    public ByteBuffer convert4Bytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(21);
+    public ByteBuffer convert4Bytes(ByteBuffer buffer) {
+        buffer.clear();
+        if (buffer.capacity() != INDEX_HEADER_SIZE) {
+            throw new IllegalArgumentException(" wront input buffer, the size need:" + INDEX_HEADER_SIZE);
+        }
+
         buffer.put(magic);
         buffer.putInt(fileNo);
         buffer.putLong(start);

@@ -19,7 +19,6 @@ public class MofkaServer {
 
     public void run() {
         LOG.info("start to run mofka server the port is:" + conf.getPort());
-
     }
 
 }

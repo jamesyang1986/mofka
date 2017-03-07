@@ -22,9 +22,8 @@ public class Bootstrap {
         MofkaServer server = new MofkaServer(conf);
         DataLog log = new DataLog(conf);
 
-        testSendData(log, conf);
-
-        System.out.println(new String(log.readData(89999L)));
+//        testSendData(log, conf);
+        System.out.println(new String(log.readData(8999L)));
     }
 
     private static void testSendData(DataLog log, MofkaConf conf) {

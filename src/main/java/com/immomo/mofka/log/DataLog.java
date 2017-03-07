@@ -2,109 +2,123 @@ package com.immomo.mofka.log;
 
 import com.immomo.mofka.conf.MofkaConf;
 import com.immomo.mofka.data.MofkaData;
+import com.immomo.mofka.exception.MsgQueueFullException;
+import com.immomo.mofka.index.Index;
+import com.immomo.mofka.monitor.MofkaMonitor;
+import com.immomo.mofka.utils.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Iterator;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Autor: jianjunyang
  * Date:17/1/16
  */
-public class DataLog {
+public class DataLog extends Thread {
 
-    private AtomicInteger curIndex = new AtomicInteger(0);
+    //    private AtomicInteger curIndex = new AtomicInteger(0);
     private MofkaConf conf;
     private RandomAccessFile curFile;
     private FileChannel curFileChannel;
     private Logger LOG = LoggerFactory.getLogger(DataLog.class);
 
     private String dataDir;
-
     private AtomicLong dataNum = new AtomicLong(0L);
-    TreeMap<Integer, long[]> filePosMap = new TreeMap<Integer, long[]>();
+    private IndexLog indexInstance;
+    private LinkedBlockingQueue<MofkaData> dataQueue = new LinkedBlockingQueue<MofkaData>(Constants.DATA_QUEUE_MAX_SIEZ);
 
     public DataLog(MofkaConf conf) {
         this.conf = conf;
         dataDir = conf.getDataDir();
+        indexInstance = IndexLog.getLogInstance(conf);
+        dataNum = new AtomicLong(indexInstance.getLastIndex() == null ?
+                0L : indexInstance.getLastIndex().getEnd());
+
+        initDataFile(conf);
+        this.start();
+    }
+
+    private void initDataFile(MofkaConf conf) {
         try {
             File dataFile = new File(dataDir);
             if (!dataFile.exists()) {
                 dataFile.mkdirs();
             }
-            curFile = new RandomAccessFile(conf.getDataDir() + "/" + curIndex + ".log", "rw");
-            curFileChannel = curFile.getChannel();
+            curFile = getLastWriteFile();
+            curFileChannel = getLastWriteFile().getChannel();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public long putData(MofkaData data) {
+    private RandomAccessFile getLastWriteFile() throws FileNotFoundException {
+        return new RandomAccessFile(conf.getDataDir() + "/" + indexInstance.getLastFileIndex() + ".log", "rw");
+    }
+
+    public void asyncSaveMsg(MofkaData data) throws InterruptedException {
+        if (!dataQueue.offer(data, 1000, TimeUnit.MILLISECONDS)) {
+            LOG.error("fail to save msg, the queue is full:" + dataQueue.size());
+            throw new MsgQueueFullException(" msg queue is full...");
+        }
+    }
+
+
+    public synchronized long putData(MofkaData data) {
         try {
             long curPos = curFile.getFilePointer();
             if (curPos > conf.getSegmentMaxSize()
                     || (curPos + data.length() > conf.getSegmentMaxSize())) {
-                curIndex.getAndIncrement();
+                indexInstance.changeFile();
                 curFile.close();
                 curFileChannel.close();
-                curFile = new RandomAccessFile(conf.getDataDir() + "/" + curIndex + ".log", "rw");
+                curFile = new RandomAccessFile(conf.getDataDir() + "/" + indexInstance.getLastFileIndex() + ".log", "rw");
                 curFileChannel = curFile.getChannel();
             }
 
             FileChannel channel = curFile.getChannel();
 
             channel.position(curFile.length());
-            channel.write(ByteBuffer.wrap(data.dump()));
+            byte[] msg = data.dump();
+            channel.write(ByteBuffer.wrap(msg));
+
+            MofkaMonitor.nwrite.addAndGet(1);
+            MofkaMonitor.byteIn.addAndGet(msg.length);
 
             //record the segment file index interval
-            Integer index = new Integer(curIndex.intValue());
-            if (!filePosMap.containsKey(index)) {
-                filePosMap.put(index, new long[]{dataNum.get(), dataNum.addAndGet(1L)});
-            } else {
-                filePosMap.get(index)[1] = dataNum.addAndGet(1L);
-            }
+            long dataIndex = dataNum.get();
+            indexInstance.updateIndex((int) indexInstance.getLastFileIndex(), dataNum.get(), dataNum.addAndGet(1L));
+            return dataIndex;
         } catch (Exception e) {
+            e.printStackTrace();
             LOG.error("fail to change data log ...", e);
         }
 
-        return 0;
+        return 0L;
     }
 
     public byte[] readData(long index) {
-        int fileIndex = -1;
-        long[] fileIndexBeginEnd = null;
-        SortedMap<Integer, long[]> indexMap = filePosMap.tailMap(0);
-        Iterator<Integer> it = indexMap.keySet().iterator();
-
-        while (it.hasNext()) {
-            Integer tmpIndex = it.next();
-            fileIndexBeginEnd = indexMap.get(tmpIndex);
-            if (index >= fileIndexBeginEnd[0] && index < fileIndexBeginEnd[1]) {
-                fileIndex = tmpIndex;
-                break;
-            }
-        }
-
+        int fileIndex = indexInstance.searchFileIndex(index);
         if (fileIndex == -1) {
             return null;
         }
 
-        System.out.println(String.format(" the file index is:%d, start: %d, end:%d, data index is:%d", fileIndex,
-                fileIndexBeginEnd[0], fileIndexBeginEnd[1], index));
+        Index fileIndexBeginEnd = indexInstance.getFileDataInterval(fileIndex);
+
+        RandomAccessFile curFile = null;
         try {
             curFile = new RandomAccessFile(conf.getDataDir() + "/" + fileIndex + ".log", "r");
-            curFileChannel = curFile.getChannel();
+            FileChannel curFileChannel = curFile.getChannel();
 
-            for (long j = fileIndexBeginEnd[0]; j <= index; j++) {
-
+            for (long j = fileIndexBeginEnd.getStart(); j <= index && j < curFile.length(); j++) {
                 ByteBuffer header = ByteBuffer.allocate(1 + 4 + 4);
                 curFileChannel.read(header);
                 header.flip();
@@ -112,14 +126,15 @@ public class DataLog {
                 if (header.get() != (byte) 0x3f) {
                     System.out.println("error magic number...");
                 }
-
                 int checkSum = header.getInt();
                 int length = header.getInt();
+
                 header.clear();
 
                 if (j == index) {
                     ByteBuffer body = ByteBuffer.allocate(length);
                     curFileChannel.read(body);
+                    MofkaMonitor.nread.addAndGet(1);
                     return body.array();
                 }
 
@@ -127,11 +142,36 @@ public class DataLog {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            if (curFile != null) {
+                try {
+                    curFile.close();
+                } catch (IOException e1) {
+                }
+            }
         }
 
         return null;
     }
 
 
+    /**
+     * save msg to disk async
+     *
+     * @see Thread#run()
+     */
+    @Override
+    public void run() {
+        while (!Thread.interrupted()) {
+            try {
+                MofkaData msg = dataQueue.take();
+                putData(msg);
+            } catch (InterruptedException e) {
+                LOG.error("thread is interrupt...die...");
+                Thread.currentThread().interrupt();
+            } catch (Exception e1) {
+                LOG.error("save msg to disk error, ", e1);
+            }
+        }
+
+    }
 }
