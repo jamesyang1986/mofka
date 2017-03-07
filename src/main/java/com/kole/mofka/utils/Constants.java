@@ -1,4 +1,4 @@
-package com.immomo.mofka.utils;
+package com.kole.mofka.utils;
 
 /**
  * autor: yang.jianjun@immomo.com

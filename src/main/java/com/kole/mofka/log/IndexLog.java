@@ -1,4 +1,4 @@
-package com.immomo.mofka.log;
+package com.kole.mofka.log;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,8 +10,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import com.immomo.mofka.conf.MofkaConf;
-import com.immomo.mofka.index.Index;
+import com.kole.mofka.conf.MofkaConf;
+import com.kole.mofka.index.Index;
 import org.apache.log4j.Logger;
 
 /**

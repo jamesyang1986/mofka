@@ -1,4 +1,4 @@
-package com.immomo.mofka.monitor;
+package com.kole.mofka.monitor;
 
 import org.apache.log4j.Logger;
 

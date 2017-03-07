@@ -1,8 +1,8 @@
-package com.immomo.mofka.bootstrap;
+package com.kole.mofka.bootstrap;
 
-import com.immomo.mofka.conf.MofkaConf;
-import com.immomo.mofka.data.MofkaData;
-import com.immomo.mofka.log.DataLog;
+import com.kole.mofka.conf.MofkaConf;
+import com.kole.mofka.data.MofkaData;
+import com.kole.mofka.log.DataLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package com.immomo.mofka.exception;
+package com.kole.mofka.exception;
 
 /**
  * autor: yang.jianjun@immomo.com

@@ -1,4 +1,4 @@
-package com.immomo.mofka.data;
+package com.kole.mofka.data;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;

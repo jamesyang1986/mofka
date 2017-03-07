@@ -1,11 +1,11 @@
-package com.immomo.mofka.log;
+package com.kole.mofka.log;
 
-import com.immomo.mofka.conf.MofkaConf;
-import com.immomo.mofka.data.MofkaData;
-import com.immomo.mofka.exception.MsgQueueFullException;
-import com.immomo.mofka.index.Index;
-import com.immomo.mofka.monitor.MofkaMonitor;
-import com.immomo.mofka.utils.Constants;
+import com.kole.mofka.conf.MofkaConf;
+import com.kole.mofka.data.MofkaData;
+import com.kole.mofka.exception.MsgQueueFullException;
+import com.kole.mofka.index.Index;
+import com.kole.mofka.monitor.MofkaMonitor;
+import com.kole.mofka.utils.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

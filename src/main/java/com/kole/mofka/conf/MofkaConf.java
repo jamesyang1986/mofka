@@ -1,4 +1,4 @@
-package com.immomo.mofka.conf;
+package com.kole.mofka.conf;
 
 /**
  * Autor: jianjunyang

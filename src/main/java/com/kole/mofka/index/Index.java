@@ -1,4 +1,4 @@
-package com.immomo.mofka.index;
+package com.kole.mofka.index;
 
 import java.nio.ByteBuffer;
 

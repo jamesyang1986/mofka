@@ -1,4 +1,4 @@
-package com.immomo.mofka.data;
+package com.kole.mofka.data;
 
 /**
  * message header defination

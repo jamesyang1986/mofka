@@ -1,4 +1,4 @@
-package com.immomo.mofka.server;
+package com.kole.mofka.server;
 
 import java.nio.channels.Selector;
 
