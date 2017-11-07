@@ -97,6 +97,7 @@ public class ServerConneciton {
         respHeaderBuffer.putInt(44);
         respHeaderBuffer.putInt(55);
 
+
         String contents = "{\n" +
                 "            \"type\": \" " + System.currentTimeMillis() + "\",\n" +
                 "            \"goods_id\": \"20010020\",\n" +
@@ -104,13 +105,19 @@ public class ServerConneciton {
                 "            \"contents\": \" " + new String(body)
                 + "        }";
 
+
+        int len = contents.getBytes().length;
+        respHeaderBuffer.putInt(len);
         respHeaderBuffer.flip();
         sock.write(respHeaderBuffer);
         respHeaderBuffer.clear();
 
-        ByteBuffer bb = ByteBuffer.allocate(contents.getBytes().length);
+        ByteBuffer bb = ByteBuffer.wrap(contents.getBytes());
         while (bb.hasRemaining()) {
-            sock.write(bb);
+            int rc = sock.write(bb);
+            if (rc < len) {
+                System.out.println(" the package is truncated...." + rc + " real len is:" + len);
+            }
         }
 
     }
