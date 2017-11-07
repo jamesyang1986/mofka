@@ -38,23 +38,31 @@ public class ClientBootStrap {
 
             for (int i = 0; i < 5; i++) {
                 sendMsg(channel, sendHeaderBuffer, i);
-                while (receiveHeaderBuffer.hasRemaining()) {
-                    channel.read(receiveHeaderBuffer);
+
+                receiveHeaderBuffer.clear();
+
+                int rc = channel.read(receiveHeaderBuffer);
+                //TODO  need Fix
+                if (rc < 12) {
+                    throw new RuntimeException("wront to read the msg header");
                 }
 
-                receiveHeaderBuffer.flip();
+                if (receiveHeaderBuffer.remaining() == 0) {
 
-                int magic = receiveHeaderBuffer.getInt();
-                int crc = receiveHeaderBuffer.getInt();
-                int len = receiveHeaderBuffer.getInt();
+                    receiveHeaderBuffer.flip();
 
-                ByteBuffer body = ByteBuffer.allocate(len);
+                    int magic = receiveHeaderBuffer.getInt();
+                    int crc = receiveHeaderBuffer.getInt();
+                    int len = receiveHeaderBuffer.getInt();
 
-                while (body.hasRemaining()) {
-                    channel.read(body);
+                    ByteBuffer body = ByteBuffer.allocate(len);
+
+                    while (body.hasRemaining()) {
+                        channel.read(body);
+                    }
+
+                    System.out.println(new String(body.array()));
                 }
-
-                System.out.println(new String(body.array()));
 
             }
 

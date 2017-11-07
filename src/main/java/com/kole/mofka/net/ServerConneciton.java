@@ -115,11 +115,10 @@ public class ServerConneciton {
         respHeaderBuffer.clear();
 
         ByteBuffer bb = ByteBuffer.wrap(contents.getBytes());
-        while (bb.hasRemaining()) {
+        int remaining = len;
+        while (remaining > 0) {
             int rc = sock.write(bb);
-            if (rc < len) {
-                System.out.println(" the package is truncated...." + rc + " real len is:" + len);
-            }
+            remaining -= rc;
         }
 
     }
