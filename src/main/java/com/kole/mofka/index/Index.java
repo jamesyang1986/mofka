@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 /**
  * file index data defination
  * <p/>
- * autor: yang.jianjun@immomo.com
+ * autor: yang.jianjun
  * created Date:2017-03-01
  */
 public class Index {

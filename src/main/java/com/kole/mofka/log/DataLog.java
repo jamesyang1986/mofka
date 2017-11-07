@@ -98,7 +98,6 @@ public class DataLog extends Thread {
             indexInstance.updateIndex((int) indexInstance.getLastFileIndex(), dataNum.get(), dataNum.addAndGet(1L));
             return dataIndex;
         } catch (Exception e) {
-            e.printStackTrace();
             LOG.error("fail to change data log ...", e);
         }
 

@@ -1,8 +1,10 @@
 package com.immomo.mofka.log;
 
-import com.immomo.mofka.bootstrap.MofkaServer;
-import com.immomo.mofka.conf.MofkaConf;
-import com.immomo.mofka.data.MofkaData;
+
+import com.kole.mofka.bootstrap.MofkaServer;
+import com.kole.mofka.conf.MofkaConf;
+import com.kole.mofka.data.MofkaData;
+import com.kole.mofka.log.DataLog;
 import junit.framework.TestCase;
 
 import java.util.concurrent.*;

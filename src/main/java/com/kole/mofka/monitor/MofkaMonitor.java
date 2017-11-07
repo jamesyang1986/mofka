@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * autor: yang.jianjun@immomo.com
+ * autor: yang.jianjun
  * created Date:2017-03-02
  */
 public class MofkaMonitor {

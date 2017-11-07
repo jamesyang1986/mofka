@@ -94,7 +94,6 @@ public class IndexLog extends Thread {
 
     public void updateIndex2disk(Index index) {
         try {
-
             ByteBuffer bb = ByteBuffer.allocate(Index.INDEX_HEADER_SIZE);
             FileChannel fc = file.getChannel();
 

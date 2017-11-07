@@ -1,7 +1,7 @@
 package com.kole.mofka.utils;
 
 /**
- * autor: yang.jianjun@immomo.com
+ * autor: yang.jianjun
  * created Date:2017-03-07
  */
 public class Constants {
