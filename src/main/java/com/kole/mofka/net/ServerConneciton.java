@@ -64,8 +64,9 @@ public class ServerConneciton {
             } else {
                 throw new IllegalStateException("wrong state for connection..");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("error for io :", e);
+            this.close();
         }
 
     }
@@ -104,6 +105,7 @@ public class ServerConneciton {
                 "            \"num\": \"1\"\n" +
                 "            \"contents\": \" " + new String(body)
                 + "        }";
+        respHeaderBuffer.putInt(contents.getBytes().length);
 
 
         int len = contents.getBytes().length;
