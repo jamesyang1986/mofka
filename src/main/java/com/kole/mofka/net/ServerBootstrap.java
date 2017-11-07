@@ -72,6 +72,7 @@ public class ServerBootstrap {
 
         } catch (IOException e) {
             LOG.error("error to open selector,", e);
+            e.printStackTrace();
         }
     }
 

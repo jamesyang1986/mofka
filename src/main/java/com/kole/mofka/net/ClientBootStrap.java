@@ -66,7 +66,7 @@ public class ClientBootStrap {
     }
 
     private static void sendMsg(SocketChannel channel, ByteBuffer buffer, int i) throws IOException {
-        String msg = "sadfsdafasd" + i;
+        String msg = "sadfsdafas7777777d" + i;
         buffer.putInt(0xCAFF);
         buffer.putInt(33);
         byte[] datas = msg.getBytes();

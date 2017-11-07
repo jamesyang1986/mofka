@@ -76,21 +76,21 @@ public class ServerConneciton {
             if (rc < 0) {
                 throw new RuntimeException(" end of sock stream");
             }
+        }
 
-            if (incomingBuffer.remaining() == 0) {
-                incomingBuffer.flip();
+        if (incomingBuffer.remaining() == 0) {
+            incomingBuffer.flip();
+            byte[] body = incomingBuffer.array();
+            System.out.println("receive msg :" + new String(body));
 
-                byte[] body = incomingBuffer.array();
-                System.out.println("receive msg :" + new String(body));
+            writeResp(body);
 
-                writeResp(body);
-
-                //read incomming buffer
-                headerBuffer.clear();
-                incomingBuffer = headerBuffer;
-            }
+            //read incomming buffer
+            headerBuffer.clear();
+            incomingBuffer = headerBuffer;
         }
     }
+
 
     private void writeResp(byte[] body) throws IOException {
         respHeaderBuffer.clear();
