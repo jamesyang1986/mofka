@@ -2,6 +2,7 @@ package com.kole.mofka.net;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
@@ -14,7 +15,11 @@ public class Client {
 
     public static void main(String[] args) {
         try {
-            Socket socket = new Socket("127.0.0.1", 9090);
+            Socket socket = new Socket();
+            socket.setKeepAlive(true);
+            socket.setSoTimeout(2 * 1000);
+            socket.setTcpNoDelay(true);
+            socket.connect(new InetSocketAddress("127.0.0.1", 9090));
             InputStream ins = socket.getInputStream();
             OutputStream out = socket.getOutputStream();
 

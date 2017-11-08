@@ -105,8 +105,6 @@ public class ServerConneciton {
                 "            \"num\": \"1\"\n" +
                 "            \"contents\": \" " + new String(body)
                 + "        }";
-        respHeaderBuffer.putInt(contents.getBytes().length);
-
 
         int len = contents.getBytes().length;
         respHeaderBuffer.putInt(len);
