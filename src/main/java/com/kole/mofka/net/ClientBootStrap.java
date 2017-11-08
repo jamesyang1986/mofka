@@ -43,14 +43,12 @@ public class ClientBootStrap {
 
                 int rc = channel.read(receiveHeaderBuffer);
                 //TODO  need Fix
-                if (rc < 12) {
-                    throw new RuntimeException("wront to read the msg header");
+                if (rc < 0) {
+                    throw new RuntimeException("wrong to read the msg header");
                 }
 
                 if (receiveHeaderBuffer.remaining() == 0) {
-
                     receiveHeaderBuffer.flip();
-
                     int magic = receiveHeaderBuffer.getInt();
                     int crc = receiveHeaderBuffer.getInt();
                     int len = receiveHeaderBuffer.getInt();
