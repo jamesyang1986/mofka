@@ -26,9 +26,9 @@ public class Client {
             ByteBuffer sendHeaderBuffer = ByteBuffer.allocateDirect(REQ_HEADER_SIZE);
             ByteBuffer receiveHeaderBuffer = ByteBuffer.allocate(RESP_HEADER_SIZE);
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 500; i++) {
                 System.out.println("--------------");
-                String msg = "test===" + i;
+                String msg = "test===:" + i + ":" + System.currentTimeMillis();
                 sendHeaderBuffer.clear();
                 sendHeaderBuffer.putInt(11);
                 sendHeaderBuffer.putInt(12);

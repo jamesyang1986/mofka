@@ -30,8 +30,7 @@ public class Bootstrap {
     }
 
     private static void testSendData(DataLog log, MofkaConf conf) {
-        String str = "sadfwerqwrqwrweqrwqerwerweqrweqrrsasadfczvsdf:";
-
+        String str = "sadfwerqwrwqerwerweqrweqrrsasadfczvsdf:";
         for (int i = 0; i < 1000000; i++) {
             byte[] strData = (str + i).getBytes();
             MofkaData data = new MofkaData(strData);
