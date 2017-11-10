@@ -44,7 +44,6 @@ public class MappedFile {
     public void saveMsg(MofkaData data) {
         ByteBuffer buffer = this.mappedByteBuffer.slice();
         buffer.put(data.dump());
-
     }
 
 }

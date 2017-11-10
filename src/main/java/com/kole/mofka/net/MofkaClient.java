@@ -20,9 +20,8 @@ import java.util.concurrent.TimeUnit;
  * Created by yang.jianjun on 2017/11/8.
  */
 public class MofkaClient {
-    private static final int HIGH_WATER_WRITE_MARK = 2000;
-    private static final int LOW_WATER_READ_MARK = 2000;
-
+    private static final int HIGH_WATER_WRITE_MARK = 50;
+    private static final int LOW_WATER_READ_MARK = 50;
     private static final int BATCH_SEND_MAX_COUNT = 50;
 
     private static Selector selector;
@@ -81,6 +80,7 @@ public class MofkaClient {
                     }
                 }
             });
+
             sendThred.start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -93,18 +93,23 @@ public class MofkaClient {
                 selector.select(1000);
                 Set<SelectionKey> keys = selector.selectedKeys();
                 Iterator<SelectionKey> keyIterator = keys.iterator();
+
                 while (keyIterator.hasNext()) {
                     SelectionKey key = keyIterator.next();
                     SocketChannel sc = (SocketChannel) key.channel();
+
+                    if (outgoingQueue.size() > 0) {
+                        enableWrite(key);
+                    }
+
                     if (key.isConnectable()) {
                         LOG.info("start to connect the server.. ip:{}, port:{}" + serverIp, serverPort);
                         sc.finishConnect();
-                        key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
+                        key.interestOps(key.interestOps() | (SelectionKey.OP_WRITE));
                     } else if (key.isReadable()) {
-                        handleRead(sc);
+                        handleRead(sc, key);
                     } else if (key.isWritable()) {
-                        handleWrite(sc);
-                        key.interestOps(key.interestOps() | SelectionKey.OP_READ);
+                        handleWrite(sc, key);
                     }
                 }
                 keys.clear();
@@ -115,22 +120,61 @@ public class MofkaClient {
         }
     }
 
-    private void handleWrite(SocketChannel sc) throws InterruptedException, IOException {
+    private void handleWrite(SocketChannel sc, SelectionKey key) throws InterruptedException, IOException {
         Msg msg;
-        while ((msg = outgoingQueue.poll(10, TimeUnit.MILLISECONDS)) != null) {
+        int i = 0;
+        while ((msg = outgoingQueue.poll(10, TimeUnit.MILLISECONDS)) != null && i < HIGH_WATER_WRITE_MARK) {
             String json = msg.toJson();
-            sendMsg(sc, receiveHeaderBuffer, json);
+            sendMsg(sc, sendHeaderBuffer, json);
+            i++;
         }
+
+        if (outgoingQueue.size() == 0) {
+            disableWrite(key);
+            return;
+        }
+
+        key.interestOps(key.interestOps() | SelectionKey.OP_READ);
+
+        System.out.println("-------finish to send " + i + " msgs---------");
 
     }
 
-    private void handleRead(SocketChannel sc) throws IOException {
+
+    synchronized void enableWrite(SelectionKey sockKey) {
+        int i = sockKey.interestOps();
+        if ((i & SelectionKey.OP_WRITE) == 0) {
+            sockKey.interestOps(i | SelectionKey.OP_WRITE);
+        }
+    }
+
+    public synchronized void disableWrite(SelectionKey sockKey) {
+        int i = sockKey.interestOps();
+        if ((i & SelectionKey.OP_WRITE) != 0) {
+            sockKey.interestOps(i & (~SelectionKey.OP_WRITE));
+        }
+    }
+
+    synchronized private void enableRead(SelectionKey sockKey) {
+        int i = sockKey.interestOps();
+        if ((i & SelectionKey.OP_READ) == 0) {
+            sockKey.interestOps(i | SelectionKey.OP_READ);
+        }
+    }
+
+    synchronized void enableReadWriteOnly(SelectionKey sockKey) {
+        sockKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+    }
+
+
+    private void handleRead(SocketChannel sc, SelectionKey key) throws IOException {
         receiveHeaderBuffer.clear();
 
         int rc = sc.read(receiveHeaderBuffer);
         //TODO  need Fix
-        if (rc < 0) {
-            throw new RuntimeException("wrong to read the msg header");
+        if (rc <= 0) {
+            key.interestOps(key.readyOps() | (~SelectionKey.OP_READ));
+            return;
         }
 
         if (receiveHeaderBuffer.remaining() == 0) {
@@ -146,6 +190,8 @@ public class MofkaClient {
             }
 
             System.out.println(new String(body.array()));
+
+            key.interestOps(key.interestOps() | (SelectionKey.OP_WRITE));
         }
     }
 
@@ -174,9 +220,17 @@ public class MofkaClient {
     public static void main(String[] args) {
 
         MofkaClient client = new MofkaClient("127.0.0.1", 9090);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1000000; i++) {
             Msg msg = new Msg("topic1", "test:::" + i);
+            msg.setCreateTime(System.currentTimeMillis());
             client.sendMsg(msg);
+            if (i > 0 && i % 1000 == 0) {
+                try {
+                    Thread.currentThread().sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         try {
@@ -188,12 +242,9 @@ public class MofkaClient {
     }
 
     public boolean sendMsg(Msg msg) {
-
         try {
             outgoingQueue.put(msg);
-            if (outgoingQueue.size() > 0) {
 
-            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

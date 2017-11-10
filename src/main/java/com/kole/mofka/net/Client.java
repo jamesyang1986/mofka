@@ -23,7 +23,7 @@ public class Client {
             InputStream ins = socket.getInputStream();
             OutputStream out = socket.getOutputStream();
 
-            ByteBuffer sendHeaderBuffer = ByteBuffer.allocateDirect(REQ_HEADER_SIZE);
+            ByteBuffer sendHeaderBuffer = ByteBuffer.allocate(REQ_HEADER_SIZE);
             ByteBuffer receiveHeaderBuffer = ByteBuffer.allocate(RESP_HEADER_SIZE);
 
             for (int i = 0; i < 500; i++) {
