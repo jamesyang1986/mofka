@@ -30,7 +30,7 @@
     </fileSets>
     <dependencySets>
         <dependencySet>
-            <outputDirectory>./lib/</outputDirectory>
+            <outputDirectory>./mofka/lib/</outputDirectory>
             <scope>runtime</scope>
         </dependencySet>
     </dependencySets>
