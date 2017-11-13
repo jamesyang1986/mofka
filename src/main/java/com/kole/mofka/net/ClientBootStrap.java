@@ -24,9 +24,7 @@ public class ClientBootStrap {
         String ip = "127.0.0.1";
         Integer port = 9090;
 
-
         LOG.info("start to connect the server {}  {} ", ip, port);
-
 
         try {
             SocketChannel channel = SocketChannel.open();
@@ -40,7 +38,6 @@ public class ClientBootStrap {
                 sendMsg(channel, sendHeaderBuffer, i);
 
                 receiveHeaderBuffer.clear();
-
                 int rc = channel.read(receiveHeaderBuffer);
                 //TODO  need Fix
                 if (rc < 0) {
@@ -54,7 +51,6 @@ public class ClientBootStrap {
                     int len = receiveHeaderBuffer.getInt();
 
                     ByteBuffer body = ByteBuffer.allocate(len);
-
                     while (body.hasRemaining()) {
                         channel.read(body);
                     }
@@ -68,7 +64,6 @@ public class ClientBootStrap {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private static void sendMsg(SocketChannel channel, ByteBuffer buffer, int i) throws IOException {

@@ -20,7 +20,17 @@ public class Bootstrap {
         conf.setDataDir("/tmp/mofka/data");
         conf.setIndexDir("/tmp/mofka/index");
 
-        ServerBootstrap bootstrap = new ServerBootstrap(9090);
+        int defaultPort = 9090;
+        if (args.length > 0) {
+            try {
+                defaultPort = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                LOG.error("fail to use the port", args[0]);
+                //ignore...
+            }
+        }
+
+        ServerBootstrap bootstrap = new ServerBootstrap(defaultPort);
 
 //        MofkaServer server = new MofkaServer(conf);
 //        DataLog log = new DataLog(conf);

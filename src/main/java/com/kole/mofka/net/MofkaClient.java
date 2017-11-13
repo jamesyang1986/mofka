@@ -98,10 +98,6 @@ public class MofkaClient {
                     SelectionKey key = keyIterator.next();
                     SocketChannel sc = (SocketChannel) key.channel();
 
-                    if (outgoingQueue.size() > 0) {
-                        enableWrite(key);
-                    }
-
                     if (key.isConnectable()) {
                         LOG.info("start to connect the server.. ip:{}, port:{}" + serverIp, serverPort);
                         sc.finishConnect();
@@ -123,7 +119,8 @@ public class MofkaClient {
     private void handleWrite(SocketChannel sc, SelectionKey key) throws InterruptedException, IOException {
         Msg msg;
         int i = 0;
-        while ((msg = outgoingQueue.poll(10, TimeUnit.MILLISECONDS)) != null && i < HIGH_WATER_WRITE_MARK) {
+        while ((msg = outgoingQueue.poll(10, TimeUnit.MILLISECONDS)) != null
+                && i < HIGH_WATER_WRITE_MARK) {
             String json = msg.toJson();
             sendMsg(sc, sendHeaderBuffer, json);
             i++;
@@ -134,7 +131,7 @@ public class MofkaClient {
             return;
         }
 
-        key.interestOps(key.interestOps() | SelectionKey.OP_READ);
+//        key.interestOps(key.interestOps() | SelectionKey.OP_READ);
 
         System.out.println("-------finish to send " + i + " msgs---------");
 
@@ -191,7 +188,7 @@ public class MofkaClient {
 
             System.out.println(new String(body.array()));
 
-            key.interestOps(key.interestOps() | (SelectionKey.OP_WRITE));
+//            key.interestOps(key.interestOps() | (SelectionKey.OP_WRITE));
         }
     }
 
@@ -219,14 +216,16 @@ public class MofkaClient {
 
     public static void main(String[] args) {
 
-        MofkaClient client = new MofkaClient("127.0.0.1", 9090);
-        for (int i = 0; i < 1000000; i++) {
-            Msg msg = new Msg("topic1", "test:::" + i);
+        MofkaClient client = new MofkaClient("39.106.48.109", 9090);
+        int start = (int) (System.currentTimeMillis() / 1000);
+
+        for (int i = start; i < start + 5; i++) {
+            Msg msg = new Msg("topic1888", "test:::" + i);
             msg.setCreateTime(System.currentTimeMillis());
             client.sendMsg(msg);
             if (i > 0 && i % 1000 == 0) {
                 try {
-                    Thread.currentThread().sleep(5000);
+                    Thread.currentThread().sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -244,6 +243,9 @@ public class MofkaClient {
     public boolean sendMsg(Msg msg) {
         try {
             outgoingQueue.put(msg);
+            if (outgoingQueue.size() > 0) {
+                selector.wakeup();
+            }
 
         } catch (InterruptedException e) {
             e.printStackTrace();
