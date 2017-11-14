@@ -10,7 +10,7 @@
     <fileSets>
         <fileSet>
             <directory>src/main/resources/</directory>
-            <outputDirectory>./mofka/config</outputDirectory>
+            <outputDirectory>./mofka/conf</outputDirectory>
             <includes>
                 <include>log4j.properties</include>
                 <include>mofka.conf</include>

@@ -60,7 +60,7 @@ public class ServerConneciton {
 
             } else if (key.isWritable()) {
 
-                System.out.println("write io events is ready...");
+                LOG.info("write io events is ready...");
             } else {
                 throw new IllegalStateException("wrong state for connection..");
             }
@@ -82,7 +82,7 @@ public class ServerConneciton {
         if (incomingBuffer.remaining() == 0) {
             incomingBuffer.flip();
             byte[] body = incomingBuffer.array();
-            System.out.println("receive msg :" + new String(body));
+            LOG.info("receive msg :" + new String(body));
 
             writeResp(body);
 
